@@ -4,6 +4,7 @@ import {
   findDeadStates,
   formatTrace,
   run,
+  tokenizeInput,
   validateDFA,
 } from '@/core/dfa';
 import {
@@ -283,4 +284,49 @@ describe('dfa core logic', () => {
       expect(formatTrace(resError)).toContain('ERROR:');
     });
   });
+
+  describe('dynamic alphabet & smart tokenizer', () => {
+    it('tokenizes multi-character alphabet symbols with space separation', () => {
+      const alphabet = ['5', '10', '25'];
+      const res = tokenizeInput('5 10 25 10', alphabet);
+      expect(res.tokens).toEqual(['5', '10', '25', '10']);
+      expect(res.error).toBeUndefined();
+    });
+
+    it('tokenizes multi-character alphabet symbols with comma separation', () => {
+      const alphabet = ['5', '10', '25'];
+      const res = tokenizeInput('10, 25, 5', alphabet);
+      expect(res.tokens).toEqual(['10', '25', '5']);
+      expect(res.error).toBeUndefined();
+    });
+
+    it('tokenizes multi-character symbols using greedy longest match when compact', () => {
+      const alphabet = ['5', '10', '25'];
+      const res = tokenizeInput('10255', alphabet);
+      expect(res.tokens).toEqual(['10', '25', '5']);
+      expect(res.error).toBeUndefined();
+    });
+
+    it('simulates custom multi-token coin DFA successfully', () => {
+      const coinDFA: DFA = {
+        name: 'Sistem Koin Tol',
+        states: ['q0', 'q10', 'PAID'],
+        alphabet: ['5', '10', '25'],
+        start: 'q0',
+        startState: 'q0',
+        accepting: ['PAID'],
+        acceptStates: ['PAID'],
+        transitions: {
+          q0: { '5': 'q0', '10': 'q10', '25': 'PAID' },
+          q10: { '5': 'q10', '10': 'PAID', '25': 'PAID' },
+          PAID: { '5': 'PAID', '10': 'PAID', '25': 'PAID' },
+        },
+      };
+
+      const res = run(coinDFA, '10 10');
+      expect(res.accepted).toBe(true);
+      expect(res.finalState).toBe('PAID');
+    });
+  });
 });
+

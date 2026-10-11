@@ -20,6 +20,7 @@ export function FlowCanvas() {
   const {
     nodes,
     edges,
+    isDockExpanded,
     onNodesChange,
     onEdgesChange,
     onConnect,
@@ -50,7 +51,13 @@ export function FlowCanvas() {
       />
 
       {/* Central React Flow Canvas */}
-      <div id="automaton-canvas" className="w-full h-full pt-14 pb-80">
+      <div
+        id="automaton-canvas"
+        className={`w-full h-full pt-14 transition-all duration-300 ease-in-out ${
+          isDockExpanded ? 'pb-80' : 'pb-10'
+        }`}
+      >
+
         <ReactFlow
           nodes={nodes}
           edges={edges}

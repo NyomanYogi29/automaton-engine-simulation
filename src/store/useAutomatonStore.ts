@@ -15,7 +15,7 @@ import {
   run,
   validateDFA,
 } from "@/core/dfa";
-import { endsWithOneDFA, PRESET_DFAS } from "@/core/presets";
+import { endsWithOneDFA, blankDFA, PRESET_DFAS } from "@/core/presets";
 import type {
   DFA,
   RunResult,
@@ -67,6 +67,8 @@ export interface AutomatonStore {
   removeSymbol: (symbol: string) => void;
   setTransition: (from: State, symbol: Symbol, to: State) => void;
   fillEmptyTransitionsWithDeadState: () => void;
+  resetToBlankCanvas: () => void;
+
 
   // React Flow Handlers
   onNodesChange: (changes: NodeChange<Node<AutomatonNodeData>>[]) => void;
@@ -80,6 +82,11 @@ export interface AutomatonStore {
   resetSimulation: () => void;
   setPlaybackSpeed: (speed: number) => void;
   setIsPlaying: (isPlaying: boolean) => void;
+
+  // UI & Dock Layout
+  isDockExpanded: boolean;
+  setIsDockExpanded: (expanded: boolean) => void;
+  toggleDockExpanded: () => void;
 }
 
 function calculateDefaultPosition(
@@ -206,6 +213,11 @@ export const useAutomatonStore = create<AutomatonStore>((set, get) => {
       playbackSpeed: 1000,
       isPlaying: false,
     },
+    isDockExpanded: true,
+    setIsDockExpanded: (isDockExpanded: boolean) => set({ isDockExpanded }),
+    toggleDockExpanded: () =>
+      set((state) => ({ isDockExpanded: !state.isDockExpanded })),
+
 
     setDFA: (newDFA: DFA) => {
       const issues = validateDFA(newDFA);
@@ -243,13 +255,14 @@ export const useAutomatonStore = create<AutomatonStore>((set, get) => {
       let name = stateName?.trim();
 
       if (!name) {
-        let counter = dfa.states.length;
+        let counter = 0;
         name = `q${counter}`;
         while (dfa.states.includes(name)) {
           counter++;
           name = `q${counter}`;
         }
       }
+
 
       if (dfa.states.includes(name)) {
         return;
@@ -590,6 +603,11 @@ export const useAutomatonStore = create<AutomatonStore>((set, get) => {
         validationIssues: validateDFA(updatedDFA),
       });
     },
+
+    resetToBlankCanvas: () => {
+      get().setDFA(blankDFA);
+    },
+
 
     onNodesChange: (changes: NodeChange<Node<AutomatonNodeData>>[]) => {
       set({

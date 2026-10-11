@@ -61,8 +61,33 @@ describe('useAutomatonStore', () => {
       expect(updated.nodes.find((n) => n.id === 'qStart')).toBeDefined();
     });
 
+    it('reclaims deleted q0 when adding a new state without name', () => {
+      const store = useAutomatonStore.getState();
+      // Initially ['q0', 'q1']
+      store.removeState('q0');
+      expect(useAutomatonStore.getState().dfa.states).toEqual(['q1']);
+
+      // Adding state without specifying name should reclaim q0, not jump to q2
+      store.addState();
+      const updated = useAutomatonStore.getState();
+      expect(updated.dfa.states).toContain('q0');
+      expect(updated.dfa.states).toContain('q1');
+    });
+
+    it('resets canvas and store cleanly to blank canvas with resetToBlankCanvas', () => {
+      const store = useAutomatonStore.getState();
+      store.resetToBlankCanvas();
+
+      const updated = useAutomatonStore.getState();
+      expect(updated.dfa.states).toHaveLength(0);
+      expect(updated.nodes).toHaveLength(0);
+      expect(updated.edges).toHaveLength(0);
+      expect(updated.dfa.name).toContain('Kanvas Kosong');
+    });
+
     it('toggles accept state status and updates node data', () => {
       const store = useAutomatonStore.getState();
+
       store.toggleAcceptState('q0');
 
       let updated = useAutomatonStore.getState();
@@ -171,4 +196,21 @@ describe('useAutomatonStore', () => {
       expect(state.simulation.trace?.error).toBeDefined();
     });
   });
+
+  describe('dock layout management', () => {
+    it('manages isDockExpanded state and provides toggle functionality', () => {
+      const store = useAutomatonStore.getState();
+      expect(store.isDockExpanded).toBe(true);
+
+      store.setIsDockExpanded(false);
+      expect(useAutomatonStore.getState().isDockExpanded).toBe(false);
+
+      store.toggleDockExpanded();
+      expect(useAutomatonStore.getState().isDockExpanded).toBe(true);
+
+      store.toggleDockExpanded();
+      expect(useAutomatonStore.getState().isDockExpanded).toBe(false);
+    });
+  });
 });
+

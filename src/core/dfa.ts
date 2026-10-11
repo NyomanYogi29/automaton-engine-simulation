@@ -95,12 +95,99 @@ export function delta(dfa: DFA, q: State, a: Symbol): State {
   return target;
 }
 
+/**
+ * Tokenizes an input string against an alphabet.
+ * Supports whitespace/comma separation, as well as greedy longest-prefix matching
+ * for compact multi-character token sequences (e.g. coin systems with '5', '10', '25').
+ */
+export function tokenizeInput(
+  w: string,
+  alphabet: Symbol[],
+): { tokens: Symbol[]; error?: string } {
+  const normalized = w.trim();
+  if (normalized === '' || normalized === 'ε') {
+    return { tokens: [] };
+  }
+
+  // Check if string contains spaces or commas
+  if (/[\s,]/.test(normalized)) {
+    const rawParts = normalized.split(/[\s,]+/).filter(Boolean);
+    const alphabetSet = new Set(alphabet);
+    const tokens: Symbol[] = [];
+
+    for (const part of rawParts) {
+      if (!alphabetSet.has(part)) {
+        return {
+          tokens: [],
+          error: `Simbol "${part}" tidak ada di alfabet Σ.`,
+        };
+      }
+      tokens.push(part);
+    }
+    return { tokens };
+  }
+
+  // If all alphabet symbols are single characters, check character by character
+  const isAllSingleChar = alphabet.every((sym) => sym.length === 1);
+  if (isAllSingleChar) {
+    const alphabetSet = new Set(alphabet);
+    const tokens: Symbol[] = [];
+    for (const char of normalized) {
+      if (!alphabetSet.has(char)) {
+        return {
+          tokens: [],
+          error: `Simbol "${char}" tidak ada di alfabet Σ.`,
+        };
+      }
+      tokens.push(char);
+    }
+    return { tokens };
+  }
+
+  // Greedy longest-match tokenization for multi-character symbols
+  const sortedAlphabet = [...alphabet].sort((a, b) => b.length - a.length);
+  const tokens: Symbol[] = [];
+  let idx = 0;
+
+  while (idx < normalized.length) {
+    let matchedSymbol: string | null = null;
+    for (const sym of sortedAlphabet) {
+      if (normalized.startsWith(sym, idx)) {
+        matchedSymbol = sym;
+        break;
+      }
+    }
+
+    if (!matchedSymbol) {
+      const remaining = normalized.slice(idx);
+      return {
+        tokens: [],
+        error: `Simbol tidak dikenal mulai dari posisi ${idx + 1}: "${remaining}".`,
+      };
+    }
+
+    tokens.push(matchedSymbol);
+    idx += matchedSymbol.length;
+  }
+
+  return { tokens };
+}
+
 export function run(dfa: DFA, w: string): RunResult {
-  const normalized = w === 'ε' ? '' : w;
   const start = getStartState(dfa);
   const acceptStates = getAcceptStates(dfa);
 
-  if (normalized === '') {
+  const { tokens, error } = tokenizeInput(w, dfa.alphabet);
+  if (error) {
+    return {
+      accepted: false,
+      finalState: start,
+      steps: [],
+      error,
+    };
+  }
+
+  if (tokens.length === 0) {
     return {
       accepted: acceptStates.includes(start),
       finalState: start,
@@ -108,23 +195,11 @@ export function run(dfa: DFA, w: string): RunResult {
     };
   }
 
-  const alphabetSet = new Set(dfa.alphabet);
-  for (const char of normalized) {
-    if (!alphabetSet.has(char)) {
-      return {
-        accepted: false,
-        finalState: start,
-        steps: [],
-        error: `Simbol "${char}" tidak ada di alfabet Σ.`,
-      };
-    }
-  }
-
   let current = start;
   const steps: TraceStep[] = [];
 
-  for (let i = 0; i < normalized.length; i++) {
-    const symbol = normalized[i];
+  for (let i = 0; i < tokens.length; i++) {
+    const symbol = tokens[i];
     const next = dfa.transitions[current]?.[symbol];
 
     if (!next) {

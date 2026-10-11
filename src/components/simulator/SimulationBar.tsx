@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { useAutomatonStore } from '@/store/useAutomatonStore';
-import { formatTrace, getStartState, getAcceptStates } from '@/core/dfa';
+import { formatTrace, getStartState, getAcceptStates, tokenizeInput } from '@/core/dfa';
 import {
   RotateCcw,
   StepForward,
@@ -17,6 +17,7 @@ export const SimulationBar: React.FC = () => {
   const {
     dfa,
     simulation,
+    isDockExpanded,
     setSimulationInput,
     stepForward,
     stepBackward,
@@ -76,7 +77,11 @@ export const SimulationBar: React.FC = () => {
     }
   }, [status]);
 
-  const totalSteps = trace ? trace.steps.length : input.length;
+  const tapeTokens = useMemo(() => {
+    return tokenizeInput(input, dfa.alphabet).tokens;
+  }, [input, dfa.alphabet]);
+
+  const totalSteps = trace ? trace.steps.length : tapeTokens.length;
 
   const traceSummary = useMemo(() => {
     if (!trace || (status !== 'ACCEPTED' && status !== 'REJECTED')) {
@@ -86,7 +91,12 @@ export const SimulationBar: React.FC = () => {
   }, [trace, status]);
 
   return (
-    <div className="fixed bottom-84 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 max-w-4xl select-none">
+    <div
+      className={`
+        fixed left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 max-w-4xl select-none transition-all duration-300 ease-in-out
+        ${isDockExpanded ? 'bottom-84' : 'bottom-14'}
+      `}
+    >
       {/* Simulation controller bar */}
       <div
         className="flex flex-wrap items-center justify-center gap-3 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-xl px-4 py-2.5 shadow-2xl"
@@ -106,28 +116,28 @@ export const SimulationBar: React.FC = () => {
             type="text"
             value={input}
             onChange={(e) => setSimulationInput(e.target.value)}
-            placeholder="e.g. 101"
-            className="w-28 bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-xs font-mono text-cyan-300 text-center tracking-widest focus:outline-none focus:border-cyan-400"
+            placeholder="e.g. 101 or 5 10"
+            className="w-32 bg-slate-950 border border-slate-700 rounded px-2.5 py-1 text-xs font-mono text-cyan-300 text-center tracking-wider focus:outline-none focus:border-cyan-400"
           />
         </div>
 
         {/* Visual string tape */}
         <div className="flex items-center gap-1 bg-slate-950 px-2 py-1 rounded border border-slate-800 max-w-xs overflow-x-auto">
-          {input.length === 0 ? (
+          {tapeTokens.length === 0 ? (
             <span className="text-xs text-slate-400 font-mono italic px-1">
-              ε (kosong)
+              {input.trim() === '' || input === 'ε' ? 'ε (kosong)' : input}
             </span>
           ) : (
-            input.split('').map((char, index) => {
+            tapeTokens.map((token, index) => {
               const isProcessed = index < currentStepIndex;
               const isCurrent = index === currentStepIndex - 1;
-              const isInvalid = !dfa.alphabet.includes(char);
+              const isInvalid = !dfa.alphabet.includes(token);
 
               return (
                 <span
                   key={index}
                   className={`
-                    w-6 h-6 flex items-center justify-center font-mono text-xs rounded transition-all shrink-0
+                    min-w-6 h-6 px-1.5 flex items-center justify-center font-mono text-xs rounded transition-all shrink-0
                     ${
                       isInvalid
                         ? 'bg-rose-950 text-rose-300 border border-rose-700 font-bold'
@@ -138,14 +148,15 @@ export const SimulationBar: React.FC = () => {
                             : 'text-slate-200 bg-slate-900/80 border border-slate-800'
                     }
                   `}
-                  title={isInvalid ? `Simbol '${char}' tidak terdaftar di Σ` : undefined}
+                  title={isInvalid ? `Simbol '${token}' tidak terdaftar di Σ` : undefined}
                 >
-                  {char}
+                  {token}
                 </span>
               );
             })
           )}
         </div>
+
 
         {/* Step navigation and auto-run controller */}
         <div className="flex items-center gap-1.5">

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAutomatonStore } from '@/store/useAutomatonStore';
 import { getStartState, getAcceptStates } from '@/core/dfa';
 import { Button } from '@/components/common/Button';
-import { AlertCircle, Wand2, Plus, Trash2 } from 'lucide-react';
+import { AlertCircle, Wand2, Plus, Trash2, Pencil, Check, X } from 'lucide-react';
 
 export const TransitionTableTab: React.FC = () => {
   const {
@@ -11,6 +11,7 @@ export const TransitionTableTab: React.FC = () => {
     setTransition,
     addState,
     removeState,
+    renameState,
     addSymbol,
     removeSymbol,
     setStartState,
@@ -18,8 +19,12 @@ export const TransitionTableTab: React.FC = () => {
     fillEmptyTransitionsWithDeadState,
   } = useAutomatonStore();
 
+  const [editingState, setEditingState] = useState<string | null>(null);
+  const [editNameValue, setEditNameValue] = useState<string>('');
+
   const startState = getStartState(dfa);
   const acceptStates = getAcceptStates(dfa);
+
 
   const missingTransitions = validationIssues.filter(
     (issue) => issue.type === 'MISSING_TRANSITION',
@@ -37,6 +42,18 @@ export const TransitionTableTab: React.FC = () => {
     setTransition(fromState, symbol, targetState);
   };
 
+  const handleSaveRename = (oldName: string) => {
+    const cleanNew = editNameValue.trim();
+    if (cleanNew && cleanNew !== oldName) {
+      if (dfa.states.includes(cleanNew)) {
+        window.alert(`State "${cleanNew}" already exists.`);
+        return;
+      }
+      renameState(oldName, cleanNew);
+    }
+    setEditingState(null);
+  };
+
   return (
     <div className="flex flex-col gap-4 text-slate-200">
       {/* Top action bar: add state/symbol and dead-state fill helper */}
@@ -45,11 +62,18 @@ export const TransitionTableTab: React.FC = () => {
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => addState()}
+            onClick={() => {
+              const customName = window.prompt(
+                'Enter state name (leave empty for auto q0, q1...):',
+              );
+              if (customName === null) return;
+              addState(customName.trim() || undefined);
+            }}
             icon={<Plus className="w-3.5 h-3.5 text-cyan-400" />}
           >
             Add State
           </Button>
+
           <Button
             size="sm"
             variant="secondary"
@@ -161,7 +185,7 @@ export const TransitionTableTab: React.FC = () => {
                     />
                   </td>
 
-                  {/* State identifier label */}
+                  {/* State identifier label with inline rename */}
                   <td className="py-2 px-4 font-mono font-semibold text-slate-200">
                     <div className="flex items-center gap-1.5">
                       {isStart && (
@@ -180,9 +204,64 @@ export const TransitionTableTab: React.FC = () => {
                           *
                         </span>
                       )}
-                      <span>{state}</span>
+                      {editingState === state ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            value={editNameValue}
+                            onChange={(e) => setEditNameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveRename(state);
+                              if (e.key === 'Escape') setEditingState(null);
+                            }}
+                            autoFocus
+                            className="w-20 bg-slate-900 border border-cyan-500 rounded px-1.5 py-0.5 text-xs font-mono text-cyan-200 outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleSaveRename(state)}
+                            className="text-emerald-400 hover:text-emerald-300 p-0.5"
+                            title="Save rename"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingState(null)}
+                            className="text-slate-400 hover:text-rose-400 p-0.5"
+                            title="Cancel"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 group/state">
+                          <span
+                            onDoubleClick={() => {
+                              setEditingState(state);
+                              setEditNameValue(state);
+                            }}
+                            title="Double-click to rename"
+                            className="cursor-pointer hover:text-cyan-300"
+                          >
+                            {state}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingState(state);
+                              setEditNameValue(state);
+                            }}
+                            className="opacity-0 group-hover/state:opacity-100 text-slate-400 hover:text-cyan-300 p-0.5 transition-opacity"
+                            title={`Rename state ${state}`}
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </td>
+
 
                   {/* Delta transition destination dropdown for each alphabet symbol */}
                   {dfa.alphabet.map((sym) => {

@@ -76,10 +76,23 @@ export const atmPinDFA: DFA = {
   },
 };
 
+export const blankDFA: DFA = {
+  name: 'Kanvas Kosong (Blank)',
+  states: [],
+  alphabet: ['0', '1'],
+  startState: '',
+  start: '',
+  acceptStates: [],
+  accepting: [],
+  transitions: {},
+};
+
 export const PRESET_DFAS: DFA[] = [
   endsWithOneDFA,
   startsWithADFA,
   evenAsDFA,
   baliScriptDFA,
   atmPinDFA,
+  blankDFA,
 ];
+

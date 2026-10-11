@@ -3,7 +3,7 @@ import { useAutomatonStore } from '@/store/useAutomatonStore';
 import { PRESET_DFAS } from '@/core/presets';
 import { useToast } from '@/hooks/useToast';
 import { exportDFAAsJSON, parseDFAJSON, exportCanvasAsPNG } from '@/lib/exportImport';
-import { Button } from '@/components/common';
+import { Button, Modal } from '@/components/common';
 import {
   Layers,
   BookOpen,
@@ -12,6 +12,7 @@ import {
   Image as ImageIcon,
   Network,
   ChevronDown,
+  RotateCcw,
 } from 'lucide-react';
 
 export interface TopNavbarProps {
@@ -25,10 +26,12 @@ export function TopNavbar({
   onOpenLanguageDrawer,
   canvasContainerId = 'automaton-canvas',
 }: TopNavbarProps) {
-  const { dfa, loadPreset, setDFA } = useAutomatonStore();
+  const { dfa, loadPreset, setDFA, resetToBlankCanvas } = useAutomatonStore();
   const { showToast } = useToast();
   const [isExportingPNG, setIsExportingPNG] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
 
   // Trigger JSON download for current DFA
   const handleExportJSON = () => {
@@ -140,7 +143,7 @@ export function TopNavbar({
         </div>
       </div>
 
-      {/* Center: Preset Selector */}
+      {/* Center: Preset Selector & Reset Action */}
       <div className="flex items-center gap-2">
         <label htmlFor="dfa-preset-picker" className="text-xs text-slate-400 hidden lg:inline">
           Preset:
@@ -164,7 +167,19 @@ export function TopNavbar({
           </select>
           <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
+
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setIsResetModalOpen(true)}
+          icon={<RotateCcw className="w-3.5 h-3.5 text-amber-400" />}
+          className="text-xs h-8 hover:border-amber-500/50"
+          title="Reset atau kosongkan kanvas diagram"
+        >
+          <span className="hidden sm:inline">Reset</span>
+        </Button>
       </div>
+
 
       {/* Right: Drawer Triggers & Import/Export Utilities */}
       <div className="flex items-center gap-1.5">
@@ -228,6 +243,45 @@ export function TopNavbar({
           <span className="hidden md:inline">Ekspor PNG</span>
         </Button>
       </div>
+
+      {/* Reset confirmation modal */}
+      <Modal
+        isOpen={isResetModalOpen}
+        onClose={() => setIsResetModalOpen(false)}
+        title="Reset & Kosongkan Kanvas?"
+        description="Aksi ini akan membersihkan seluruh state dan transisi pada kanvas diagram."
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsResetModalOpen(false)}
+            >
+              Batal
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => {
+                resetToBlankCanvas();
+                setIsResetModalOpen(false);
+                showToast(
+                  'info',
+                  'Kanvas Dikosongkan',
+                  'Memulai dari kanvas diagram bersih.',
+                );
+              }}
+            >
+              Kosongkan Kanvas
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-xs text-slate-300">
+          Apakah Anda yakin ingin mengosongkan kanvas? Semua diagram yang belum diekspor ke file JSON akan hilang.
+        </p>
+      </Modal>
     </header>
   );
 }
+
