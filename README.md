@@ -1,87 +1,98 @@
 # Otomata Lab
 
-Web application interaktif untuk simulasi, verifikasi formal, dan visualisasi teori bahasa dan otomata (DFA & NFA). Aplikasi ini dibangun dengan pendekatan *Canvas-First Workspace*, menyinkronkan grafik diagram mesin secara dua arah dengan matriks tabel transisi.
+An interactive web application for the simulation, formal verification, and visualization of formal language theory and automata (DFA and NFA). Built with a **Canvas-First Workspace** architecture, Otomata Lab features bidirectional synchronization between an interactive `@xyflow/react` state diagram canvas and a formal transition table matrix.
 
 ---
 
-## Fitur Utama
+## Key Features
 
-### 1. Alfabet & String Playground (Level 1)
-- **Definisi Alfabet Formal ($\Sigma$):** Notasi himpunan formal dengan validasi penolakan simbol duplikat dan simbol kosong.
-- **Validasi String:** Pendeteksian keabsahan string $w \in \Sigma^*$ dengan penyorotan simbol yang tidak dikenal.
-- **Operasi Panjang & Konkatenasi:** Perhitungan $|w|$, verifikasi sifat non-komutatif $w \cdot v \ne v \cdot w$, dan hukum identitas string kosong $w \cdot \varepsilon = w$.
-- **Generator $\Sigma^n$ & $\Sigma^*$:** Pembangkit kombinasi string dengan panjang tepat $n$ serta deret bintang Kleene $\Sigma^*$ terurut bergradasi.
+### 1. Alphabet & String Playground (Level 1)
+- **Formal Alphabet Definition ($\Sigma$):** Set notation input with automatic validation rejecting duplicates and empty tokens. Supports single-character and multi-character symbols (e.g. `0, 1`, `a, b`, `x, y`, or coin systems like `5, 10, 25`).
+- **String Validation:** Real-time detection of string validity ($w \in \Sigma^*$) with highlighting for unrecognized symbols.
+- **Length & Concatenation:** String length evaluation ($|w|$), demonstration of non-commutativity ($w \cdot v \ne v \cdot w$), and empty string identity law ($w \cdot \varepsilon = w$).
+- **$\Sigma^n$ & $\Sigma^*$ Generator:** Generates exact length combinations ($\Sigma^n$) and ordered Kleene star series ($\Sigma^*$).
 
-### 2. Pemeriksaan Aturan Bahasa (Level 2)
-- **5 Preset Aturan Bahasa Formal:**
-  1. Diawali simbol 'a'
-  2. Diakhiri simbol 'b'
-  3. Panjang string tepat 2 ($|w| = 2$)
-  4. Hanya berisi simbol 'b' ($w \in \{b\}^*$)
-  5. Jumlah kemunculan 'a' bernilai genap
-- **Uji Keanggotaan String:** Evaluasi deterministik dengan penjelasan formal penyebab diterima atau ditolaknya string.
-- **Visualisasi Subset $L \subseteq \Sigma^*$:** Pemetaan visual himpunan bagian string $\Sigma^*$ hingga panjang $k$ dengan rasio persentase keterisian.
+### 2. Formal Language Checker (Level 2)
+- **5 Built-In Language Presets:**
+  1. Starts with symbol 'a'
+  2. Ends with symbol 'b'
+  3. String length of exactly 2 ($|w| = 2$)
+  4. Contains only symbol 'b' ($w \in \{b\}^*$)
+  5. Even number of 'a' symbols
+- **String Membership Testing:** Deterministic membership checking with step-by-step formal verification explanations.
+- **Subset Visualization ($L \subseteq \Sigma^*$):** Visual mapping of language members within $\Sigma^*$ up to length $k$, complete with subset coverage ratios.
 
-### 3. DFA Engine & Diagram Kanvas Interaktif (Level 3 & 4)
-- **Representasi 5-Tuple Formal:** $M = (Q, \Sigma, \delta, q_0, F)$ dengan validasi kelengkapan deterministik penuh.
-- **Sinkronisasi Dua Arah:** Modifikasi pada tabel transisi otomatis merender node dan edge pada kanvas `@xyflow/react`, dan sebaliknya.
-- **Rendering Simbol Gabungan & Busur Lengkung:** Kurva offset dua arah tanpa tumpang tindih, self-loop melingkar, dan penggabungan simbol menuju target yang sama (`0, 1`).
-- **Simulasi Langkah demi Langkah:** Penelusuran pita string simbol demi simbol, node aktif menyala (*infrantery active glow*), selebrasi confetti pada string diterima, dan banner hasil ringkas formal.
-- **Bantuan Dead-State Otomatis:** Deteksi sel transisi kosong dan pengarahan otomatis ke state $q_{dead}$.
+### 3. DFA Engine & Interactive Canvas (Level 3 & 4)
+- **Formal 5-Tuple Representation:** $M = (Q, \Sigma, \delta, q_0, F)$ with completeness and determinism validation.
+- **Two-Way Synchronization:** Modifying the transition table immediately updates canvas nodes and transitions, and interacting with the canvas updates the transition table matrix in real time.
+- **Precision Edge Rendering:**
+  - Dedicated self-loop transitions tightly anchored to the top perimeter of state nodes.
+  - Symmetrical outward curves for bidirectional edges ($A \to B$ and $B \to A$) that eliminate overlapping.
+  - Snappy grid snapping (`20x20`) for clean state alignment.
+- **Dynamic State Management:**
+  - Inline state renaming directly inside the transition table.
+  - Automatic reclamation of the lowest available state index (e.g. reclaiming $q_0$ if deleted).
+  - Ability to start from a blank canvas (*"Kanvas Kosong"*) or reset the canvas at any time.
+- **Step-by-Step Simulation:**
+  - Visual string tape supporting single and multi-character tokens (with space/comma splitting and greedy longest-prefix matching).
+  - Step forward, step backward, auto-play with adjustable speed, and active state glow animations.
+  - Confetti celebration upon accepted string runs.
+- **Automated Dead-State Routing:** Single-click helper to direct all unassigned transitions to a trap/dead state ($q_{dead}$).
 
-### 4. Penguji Massal (Batch Test Runner)
-- Uji massal daftar string input beserta harapan (diterima / ditolak).
-- Ringkasan statistik rasio kelulusan.
-- Peringatan dini jika daftar uji tidak memuat string kosong $\varepsilon$.
+### 4. Interactive Batch Test Runner
+- **Unified Test Matrix:** Interactive table with rows for input strings, expected outcomes (*Accept / Reject*), execution results, pass/fail badges, and step-by-step execution traces.
+- Quick buttons to add rows, test the empty string ($\varepsilon$), and reset test suites.
+- Automatic warning if the empty string ($\varepsilon$) is missing from the test suite.
 
-### 5. Utilitas Ekspor & Impor
-- **Ekspor & Impor JSON:** Menyimpan dan memuat konfigurasi mesin otomata formal dalam format JSON.
-- **Ekspor Gambar PNG:** Mengunduh diagram visual kanvas ke format gambar PNG berkualitas tinggi.
+### 5. Export & Import Utilities
+- **JSON Configuration:** Save and load DFA configurations in standardized JSON format.
+- **PNG Diagram Export:** Export high-resolution canvas diagrams directly as PNG images.
 
 ---
 
-## Preset Bawaan Perkuliahan
+## Course Presets
 
-1. **Diakhiri 1** ($\Sigma = \{0, 1\}$)
-2. **Diawali a** ($\Sigma = \{a, b\}$, dengan dead state $q_2$)
-3. **Jumlah a genap** ($\Sigma = \{a, b\}$, state awal sekaligus akhir)
-4. **Aturan Menulis Aksara Bali** ($\Sigma = \{K, V\}$)
-5. **Verifikasi PIN ATM 3 Digit** ($\Sigma = \{0, 1, C, E\}$, studi kasus dunia nyata)
+1. **Ends with 1** ($\Sigma = \{0, 1\}$)
+2. **Starts with a (with dead state)** ($\Sigma = \{a, b\}$, dead state $q_2$)
+3. **Even number of a** ($\Sigma = \{a, b\}$, start state is also accept state)
+4. **Balinese Script Writing Rules** ($\Sigma = \{K, V\}$)
+5. **3-Digit ATM PIN Verification** ($\Sigma = \{0, 1, C, E\}$, real-world state machine)
+6. **Blank Canvas** (clean starting state for custom automata design)
 
 ---
 
-## Teknologi yang Digunakan
+## Tech Stack
 
 - **Runtime & Package Manager:** Bun
-- **Frontend Framework:** React 19 + TypeScript + Vite
+- **Frontend Framework:** React 19, TypeScript, Vite
 - **Diagram Canvas:** `@xyflow/react` (React Flow v12)
 - **State Management:** Zustand
-- **Styling & UI:** Tailwind CSS v4 + Lucide Icons
-- **Pengujian Logika Formal:** Vitest
-- **Utilitas Visual:** `canvas-confetti`, `html-to-image`
+- **Styling:** Tailwind CSS v4, Lucide Icons
+- **Formal Verification & Testing:** Vitest
+- **Visual Utilities:** `canvas-confetti`, `html-to-image`
 
 ---
 
-## Cara Menjalankan Proyek
+## Getting Started
 
-### 1. Instalasi Dependensi
+### 1. Install Dependencies
 ```bash
 bun install
 ```
 
-### 2. Menjalankan Server Pengembang
+### 2. Run Development Server
 ```bash
 bun run dev
 ```
-Buka browser pada alamat `http://localhost:5173`.
+Open your browser at `http://localhost:5173`.
 
-### 3. Menjalankan Seluruh Pengujian (Vitest)
+### 3. Run Test Suite (Vitest)
 ```bash
-bun run test
+bun test
 ```
 
-### 4. Kompilasi & Build Produksi
+### 4. Build for Production
 ```bash
 bun run build
 ```
-Hasil build produksi siap didistribusikan pada folder `dist/`.
+Production assets are generated in the `dist/` directory.
