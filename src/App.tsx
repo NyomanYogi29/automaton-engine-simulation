@@ -7,7 +7,7 @@ import {
   ReactFlowProvider,
 } from '@xyflow/react';
 import { useAutomatonStore } from '@/store/useAutomatonStore';
-import { StateNode, AutomatonEdge } from '@/components/canvas';
+import { StateNode, AutomatonEdge, SelfLoopEdge } from '@/components/canvas';
 import { BottomDock, TopNavbar } from '@/components/layout';
 import { SimulationBar } from '@/components/simulator';
 import { AlphabetDrawer, LanguageDrawer } from '@/components/drawers';
@@ -35,6 +35,7 @@ export function FlowCanvas() {
   const edgeTypes = useMemo(
     () => ({
       automatonEdge: AutomatonEdge,
+      selfLoop: SelfLoopEdge,
     }),
     [],
   );
@@ -58,11 +59,14 @@ export function FlowCanvas() {
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          snapToGrid={true}
+          snapGrid={[20, 20]}
           fitView
           colorMode="dark"
           minZoom={0.2}
           maxZoom={2.5}
         >
+
           <Background color="#1e293b" gap={20} size={1.5} />
           <Controls className="bg-slate-900! border-slate-800! fill-slate-300!" />
           <MiniMap

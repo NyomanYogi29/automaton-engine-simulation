@@ -2,19 +2,20 @@ import React, { memo, useMemo } from 'react';
 import {
   BaseEdge,
   EdgeLabelRenderer,
+  useInternalNode,
   type EdgeProps,
   type Edge,
 } from '@xyflow/react';
 import {
-  calculateCurvedEdgePath,
-  calculateSelfLoopPath,
+  calculateFloatingEdgePath,
   formatTransitionSymbols,
 } from '@/lib/geometry';
 import type { AutomatonEdgeData } from '@/store/useAutomatonStore';
+import { SelfLoopEdge, type SelfLoopEdgeType } from './SelfLoopEdge';
 
 export type AutomatonEdgeType = Edge<AutomatonEdgeData, 'automatonEdge'>;
 
-export const AutomatonEdge: React.FC<EdgeProps<AutomatonEdgeType>> = memo(
+const StandardAutomatonEdge: React.FC<EdgeProps<AutomatonEdgeType>> = memo(
   ({
     id,
     source,
@@ -27,8 +28,13 @@ export const AutomatonEdge: React.FC<EdgeProps<AutomatonEdgeType>> = memo(
     selected,
     markerEnd,
   }) => {
-    const isSelfLoop = source === target;
+    const sourceNode = useInternalNode(source);
+    const targetNode = useInternalNode(target);
+
     const isActive = Boolean(data?.isActive);
+    const isBidirectional = Boolean(data?.isBidirectional);
+
+
     const symbols = useMemo(
       () => data?.symbols || [],
       [data?.symbols],
@@ -38,29 +44,45 @@ export const AutomatonEdge: React.FC<EdgeProps<AutomatonEdgeType>> = memo(
       [symbols],
     );
 
-    const { edgePath, labelX, labelY } = useMemo(() => {
-      if (isSelfLoop) {
-        const loop = calculateSelfLoopPath(sourceX, sourceY, 32, 52);
-        return {
-          edgePath: loop.path,
-          labelX: loop.labelX,
-          labelY: loop.labelY,
-        };
-      }
+    const { path: edgePath, labelX, labelY } = useMemo(() => {
+      const sourceWidth = sourceNode?.measured?.width ?? 64;
+      const sourceHeight = sourceNode?.measured?.height ?? 64;
+      const sourceRadius = sourceWidth / 2;
 
-      // Offset curve path by 32px to prevent bidirectional overlap (e.g. q0 -> q1 and q1 -> q0)
-      const curved = calculateCurvedEdgePath(
-        { x: sourceX, y: sourceY },
-        { x: targetX, y: targetY },
-        32,
+      const targetWidth = targetNode?.measured?.width ?? 64;
+      const targetHeight = targetNode?.measured?.height ?? 64;
+
+      const sourceCenter = sourceNode?.internals?.positionAbsolute
+        ? {
+            x: sourceNode.internals.positionAbsolute.x + sourceWidth / 2,
+            y: sourceNode.internals.positionAbsolute.y + sourceHeight / 2,
+          }
+        : { x: sourceX, y: sourceY };
+
+      const targetCenter = targetNode?.internals?.positionAbsolute
+        ? {
+            x: targetNode.internals.positionAbsolute.x + targetWidth / 2,
+            y: targetNode.internals.positionAbsolute.y + targetHeight / 2,
+          }
+        : { x: targetX, y: targetY };
+
+      return calculateFloatingEdgePath(
+        sourceCenter,
+        targetCenter,
+        sourceRadius,
+        isBidirectional,
+        28,
       );
+    }, [
+      sourceNode,
+      targetNode,
+      sourceX,
+      sourceY,
+      targetX,
+      targetY,
+      isBidirectional,
+    ]);
 
-      return {
-        edgePath: curved.path,
-        labelX: curved.labelX,
-        labelY: curved.labelY,
-      };
-    }, [isSelfLoop, sourceX, sourceY, targetX, targetY]);
 
     return (
       <>
@@ -107,4 +129,16 @@ export const AutomatonEdge: React.FC<EdgeProps<AutomatonEdgeType>> = memo(
   },
 );
 
+StandardAutomatonEdge.displayName = 'StandardAutomatonEdge';
+
+export const AutomatonEdge: React.FC<EdgeProps<AutomatonEdgeType>> = memo(
+  (props) => {
+    if (props.source === props.target) {
+      return <SelfLoopEdge {...(props as unknown as EdgeProps<SelfLoopEdgeType>)} />;
+    }
+    return <StandardAutomatonEdge {...props} />;
+  },
+);
+
 AutomatonEdge.displayName = 'AutomatonEdge';
+

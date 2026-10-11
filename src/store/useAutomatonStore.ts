@@ -35,7 +35,9 @@ export interface AutomatonNodeData extends Record<string, unknown> {
 export interface AutomatonEdgeData extends Record<string, unknown> {
   symbols: string[];
   isActive?: boolean;
+  isBidirectional?: boolean;
 }
+
 
 export interface SimulationState {
   input: string;
@@ -163,19 +165,24 @@ function generateGraphElements(
     const [source, target] = key.split("->");
     const sortedSymbols = Array.from(symbolSet).sort();
     const isCurrentActive = activeEdgeKey === key;
+    const isSelfLoop = source === target;
+    const isBidirectional =
+      !isSelfLoop && transitionPairMap.has(`${target}->${source}`);
 
     edges.push({
       id: `e-${source}-${target}`,
       source,
       target,
-      type: "automatonEdge",
+      type: isSelfLoop ? "selfLoop" : "automatonEdge",
       label: sortedSymbols.join(", "),
       data: {
         symbols: sortedSymbols,
         isActive: isCurrentActive,
+        isBidirectional,
       },
     });
   }
+
 
   return { nodes, edges };
 }

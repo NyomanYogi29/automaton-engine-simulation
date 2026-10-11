@@ -87,7 +87,28 @@ describe('useAutomatonStore', () => {
       expect(edge).toBeDefined();
       expect(edge?.data?.symbols).toEqual(['0', '1']);
       expect(edge?.label).toBe('0, 1');
+      expect(edge?.type).toBe('automatonEdge');
+
+      // Check self-loop edge type
+      const selfLoopEdge = updated.edges.find((e) => e.source === e.target);
+      if (selfLoopEdge) {
+        expect(selfLoopEdge.type).toBe('selfLoop');
+      }
     });
+
+    it('identifies bidirectional transitions between node pairs', () => {
+      const store = useAutomatonStore.getState();
+      store.setTransition('q0', '0', 'q1');
+      store.setTransition('q1', '0', 'q0');
+
+      const updated = useAutomatonStore.getState();
+      const fwd = updated.edges.find((e) => e.source === 'q0' && e.target === 'q1');
+      const bwd = updated.edges.find((e) => e.source === 'q1' && e.target === 'q0');
+
+      expect(fwd?.data?.isBidirectional).toBe(true);
+      expect(bwd?.data?.isBidirectional).toBe(true);
+    });
+
 
     it('automatically fills empty cells with dead state qDead', () => {
       const store = useAutomatonStore.getState();
