@@ -1,5 +1,7 @@
 export type StateId = string;
+export type State = StateId;
 export type AlphabetSymbol = string;
+export type Symbol = AlphabetSymbol;
 export type Alphabet = AlphabetSymbol[];
 
 export interface TransitionStep {
@@ -7,6 +9,13 @@ export interface TransitionStep {
   symbol: AlphabetSymbol;
   to: StateId;
   index: number;
+}
+
+export interface TraceStep {
+  step: number;
+  from: State;
+  symbol: Symbol;
+  to: State;
 }
 
 export type SimulationStatus =
@@ -26,13 +35,22 @@ export interface SimulationTrace {
   errorMessage?: string;
 }
 
+export interface RunResult {
+  accepted: boolean;
+  finalState: State;
+  steps: TraceStep[];
+  error?: string;
+}
+
 export interface DFA {
   name: string;
-  states: StateId[]; // Q
+  states: State[]; // Q
   alphabet: Alphabet; // Σ
-  transitions: Record<StateId, Record<AlphabetSymbol, StateId>>; // δ(q, a) = p
-  startState: StateId; // q0
-  acceptStates: StateId[]; // F
+  transitions: Record<State, Record<Symbol, State>>; // δ(q, a) = p
+  startState: State; // q0
+  acceptStates: State[]; // F
+  start?: State; // alias for startState
+  accepting?: State[]; // alias for acceptStates
 }
 
 export interface NFA {
@@ -43,16 +61,22 @@ export interface NFA {
   transitions: Record<StateId, Record<AlphabetSymbol, StateId[]>>;
   startState: StateId;
   acceptStates: StateId[];
+  start?: StateId;
+  accepting?: StateId[];
 }
 
-export type ValidationCode =
+export type ValidationIssueType =
   | 'MISSING_TRANSITION'
-  | 'NO_START_STATE'
-  | 'START_STATE_NOT_FOUND'
-  | 'ACCEPT_STATE_NOT_FOUND'
+  | 'UNKNOWN_STATE'
+  | 'NO_START'
+  | 'START_NOT_IN_Q'
+  | 'ACCEPTING_NOT_IN_Q'
   | 'DEAD_STATE_DETECTED';
 
+export type ValidationCode = ValidationIssueType;
+
 export interface ValidationIssue {
+  type: ValidationIssueType;
   code: ValidationCode;
   severity: 'error' | 'warning' | 'info';
   message: string;
