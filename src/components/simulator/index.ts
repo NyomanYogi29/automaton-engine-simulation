@@ -1,1 +1,0 @@
-export { SimulationBar } from './SimulationBar';

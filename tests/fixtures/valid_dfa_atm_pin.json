@@ -1,0 +1,14 @@
+{
+  "name": "ATM PIN Verification System (Imported)",
+  "states": ["IDLE", "D1", "D2", "AUTH", "BLOCKED"],
+  "alphabet": ["0", "1", "C", "E"],
+  "start": "IDLE",
+  "accepting": ["AUTH"],
+  "transitions": {
+    "IDLE": { "0": "D1", "1": "D1", "C": "IDLE", "E": "BLOCKED" },
+    "D1": { "0": "D2", "1": "D2", "C": "IDLE", "E": "BLOCKED" },
+    "D2": { "0": "BLOCKED", "1": "BLOCKED", "C": "IDLE", "E": "AUTH" },
+    "AUTH": { "0": "AUTH", "1": "AUTH", "C": "IDLE", "E": "AUTH" },
+    "BLOCKED": { "0": "BLOCKED", "1": "BLOCKED", "C": "BLOCKED", "E": "BLOCKED" }
+  }
+}

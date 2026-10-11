@@ -1,0 +1,12 @@
+{
+  "name": "Starts with a (Imported)",
+  "states": ["q0", "q1", "qDead"],
+  "alphabet": ["a", "b"],
+  "startState": "q0",
+  "acceptStates": ["q1"],
+  "transitions": {
+    "q0": { "a": "q1", "b": "qDead" },
+    "q1": { "a": "q1", "b": "q1" },
+    "qDead": { "a": "qDead", "b": "qDead" }
+  }
+}

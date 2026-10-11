@@ -3,7 +3,6 @@ import { useAutomatonStore } from '@/store/useAutomatonStore';
 import {
   TransitionTableTab,
   TestRunnerTab,
-  TraceHistoryTab,
   ValidationIssuesTab,
 } from '@/components/dock-tabs';
 import {
@@ -11,11 +10,10 @@ import {
   ChevronDown,
   TableProperties,
   ListChecks,
-  History,
   AlertTriangle,
 } from 'lucide-react';
 
-export type DockTabId = 'table' | 'test' | 'trace' | 'validation';
+export type DockTabId = 'table' | 'test' | 'validation';
 
 export const BottomDock: React.FC = () => {
   const isExpanded = useAutomatonStore((s) => s.isDockExpanded);
@@ -78,25 +76,6 @@ export const BottomDock: React.FC = () => {
           <button
             type="button"
             onClick={() => {
-              setActiveTab('trace');
-              setIsExpanded(true);
-            }}
-            className={`
-              flex items-center gap-1.5 px-3 py-1 rounded text-xs font-medium transition-colors
-              ${
-                activeTab === 'trace' && isExpanded
-                  ? 'bg-slate-800 text-cyan-300 border border-slate-700/80'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }
-            `}
-          >
-            <History className="w-3.5 h-3.5 text-sky-400" />
-            <span>Trace History</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
               setActiveTab('validation');
               setIsExpanded(true);
             }}
@@ -150,7 +129,6 @@ export const BottomDock: React.FC = () => {
         <div className="flex-1 p-4 overflow-y-auto">
           {activeTab === 'table' && <TransitionTableTab />}
           {activeTab === 'test' && <TestRunnerTab />}
-          {activeTab === 'trace' && <TraceHistoryTab />}
           {activeTab === 'validation' && <ValidationIssuesTab />}
         </div>
       )}

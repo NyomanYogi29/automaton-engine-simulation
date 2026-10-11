@@ -9,7 +9,6 @@ import {
 import { useAutomatonStore } from '@/store/useAutomatonStore';
 import { StateNode, AutomatonEdge, SelfLoopEdge } from '@/components/canvas';
 import { BottomDock, TopNavbar } from '@/components/layout';
-import { SimulationBar } from '@/components/simulator';
 import { AlphabetDrawer, LanguageDrawer } from '@/components/drawers';
 import { ToastProvider } from '@/components/common';
 
@@ -83,9 +82,6 @@ export function FlowCanvas() {
           />
         </ReactFlow>
       </div>
-
-      {/* Floating Simulation Bar */}
-      <SimulationBar />
 
       {/* Collapsible IDE-style Bottom Dock */}
       <BottomDock />
