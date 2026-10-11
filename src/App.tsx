@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ReactFlow,
   Background,
@@ -8,10 +8,15 @@ import {
 } from '@xyflow/react';
 import { useAutomatonStore } from '@/store/useAutomatonStore';
 import { StateNode, AutomatonEdge } from '@/components/canvas';
-import { BottomDock } from '@/components/layout';
+import { BottomDock, TopNavbar } from '@/components/layout';
 import { SimulationBar } from '@/components/simulator';
+import { AlphabetDrawer, LanguageDrawer } from '@/components/drawers';
+import { ToastProvider } from '@/components/common';
 
 export function FlowCanvas() {
+  const [isAlphabetOpen, setIsAlphabetOpen] = useState(false);
+  const [isLanguageOpen, setIsLanguageOpen] = useState(false);
+
   const {
     nodes,
     edges,
@@ -36,8 +41,15 @@ export function FlowCanvas() {
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-slate-950 font-sans select-none">
+      {/* Top Navigation Bar with preset picker, drawers, and export/import */}
+      <TopNavbar
+        onOpenAlphabetDrawer={() => setIsAlphabetOpen(true)}
+        onOpenLanguageDrawer={() => setIsLanguageOpen(true)}
+        canvasContainerId="automaton-canvas"
+      />
+
       {/* Central React Flow Canvas */}
-      <div className="w-full h-full pb-80">
+      <div id="automaton-canvas" className="w-full h-full pt-14 pb-80">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -66,14 +78,29 @@ export function FlowCanvas() {
 
       {/* Collapsible IDE-style Bottom Dock */}
       <BottomDock />
+
+      {/* Level 1: Alphabet & String Playground Drawer */}
+      <AlphabetDrawer
+        isOpen={isAlphabetOpen}
+        onClose={() => setIsAlphabetOpen(false)}
+      />
+
+      {/* Level 2: Language Checker Drawer */}
+      <LanguageDrawer
+        isOpen={isLanguageOpen}
+        onClose={() => setIsLanguageOpen(false)}
+      />
     </div>
   );
 }
 
 export default function App() {
   return (
-    <ReactFlowProvider>
-      <FlowCanvas />
-    </ReactFlowProvider>
+    <ToastProvider>
+      <ReactFlowProvider>
+        <FlowCanvas />
+      </ReactFlowProvider>
+    </ToastProvider>
   );
 }
+
