@@ -1,5 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useAutomatonStore } from '@/store/useAutomatonStore';
+import {
+  useAutomatonStore,
+  DEFAULT_TEST_CASES,
+  type TestCaseItem,
+} from '@/store/useAutomatonStore';
 import { run, formatTrace, tokenizeInput } from '@/core/dfa';
 import { Button } from '@/components/common/Button';
 import { Badge } from '@/components/common/Badge';
@@ -16,15 +20,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export interface TestCaseItem {
-  id: string;
-  input: string;
-  expected: boolean;
-  actual?: boolean;
-  passed?: boolean;
-  error?: string;
-  trace?: string;
-}
+export type { TestCaseItem };
 
 export const TestRunnerTab: React.FC = () => {
   const {
@@ -36,21 +32,15 @@ export const TestRunnerTab: React.FC = () => {
     setIsPlaying,
     setPlaybackSpeed,
     setSimulationInput,
+    testCases,
+    setTestCases,
+    testCasesHasRun: hasRun,
+    setTestCasesHasRun: setHasRun,
   } = useAutomatonStore();
 
   const { status, currentStepIndex, trace, isPlaying, playbackSpeed } = simulation;
 
   const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
-
-  const [testCases, setTestCases] = useState<TestCaseItem[]>([
-    { id: '1', input: '101', expected: true },
-    { id: '2', input: '110', expected: false },
-    { id: '3', input: 'ε', expected: false },
-    { id: '4', input: '1', expected: true },
-    { id: '5', input: '0', expected: false },
-  ]);
-
-  const [hasRun, setHasRun] = useState<boolean>(false);
 
   // Active test case entity
   const activeCase = useMemo(
@@ -170,11 +160,7 @@ export const TestRunnerTab: React.FC = () => {
 
   const handleResetCases = () => {
     handleStopSimulation();
-    setTestCases([
-      { id: '1', input: '101', expected: true },
-      { id: '2', input: '110', expected: false },
-      { id: '3', input: 'ε', expected: false },
-    ]);
+    setTestCases(DEFAULT_TEST_CASES);
     setHasRun(false);
   };
 

@@ -39,6 +39,24 @@ export interface AutomatonEdgeData extends Record<string, unknown> {
 }
 
 
+export interface TestCaseItem {
+  id: string;
+  input: string;
+  expected: boolean;
+  actual?: boolean;
+  passed?: boolean;
+  error?: string;
+  trace?: string;
+}
+
+export const DEFAULT_TEST_CASES: TestCaseItem[] = [
+  { id: "1", input: "101", expected: true },
+  { id: "2", input: "110", expected: false },
+  { id: "3", input: "ε", expected: false },
+  { id: "4", input: "1", expected: true },
+  { id: "5", input: "0", expected: false },
+];
+
 export interface SimulationState {
   input: string;
   status: SimulationStatus;
@@ -82,6 +100,14 @@ export interface AutomatonStore {
   resetSimulation: () => void;
   setPlaybackSpeed: (speed: number) => void;
   setIsPlaying: (isPlaying: boolean) => void;
+
+  // Batch test runner (kept in the store so it survives tab switches)
+  testCases: TestCaseItem[];
+  testCasesHasRun: boolean;
+  setTestCases: (
+    cases: TestCaseItem[] | ((prev: TestCaseItem[]) => TestCaseItem[]),
+  ) => void;
+  setTestCasesHasRun: (hasRun: boolean) => void;
 
   // UI & Dock Layout
   isDockExpanded: boolean;
@@ -213,6 +239,13 @@ export const useAutomatonStore = create<AutomatonStore>((set, get) => {
       playbackSpeed: 1000,
       isPlaying: false,
     },
+    testCases: DEFAULT_TEST_CASES,
+    testCasesHasRun: false,
+    setTestCases: (cases) =>
+      set((state) => ({
+        testCases: typeof cases === "function" ? cases(state.testCases) : cases,
+      })),
+    setTestCasesHasRun: (testCasesHasRun: boolean) => set({ testCasesHasRun }),
     isDockExpanded: true,
     setIsDockExpanded: (isDockExpanded: boolean) => set({ isDockExpanded }),
     toggleDockExpanded: () =>
